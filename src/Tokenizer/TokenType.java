@@ -1,7 +1,7 @@
 package Tokenizer;
 
 public enum TokenType {
-
+    /** 空 **/
     None, //空
 
     /** 标识符 **/

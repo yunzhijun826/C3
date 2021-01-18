@@ -1,17 +1,12 @@
 package Tokenizer;
-
-
 import error.ErrorCode;
 import error.TokenizeError;
 import util.Pos;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Tokenizer {
     private StringIter it;
-
-    //StringBuilder token = new StringBuilder();
     String token="";
     public Tokenizer(StringIter it) {
         this.it = it;
@@ -64,43 +59,22 @@ public class Tokenizer {
         // Token 的 Value 应填写数字的值
 
         while(Character.isDigit(it.peekChar())) {// 直到查看下一个字符不是数字为止:
-            //char peek = it.peekChar();
-//            if(!Character.isDigit(peek)){
-//                break;
-//            }
-            //char now = it.nextChar();
-            //token.append(now);
             token+=it.nextChar();
         }
 
         if(it.peekChar() == '.'){
-            //token.append(it.nextChar());
             token+=it.nextChar();
             while(Character.isDigit(it.peekChar())) {// 直到查看下一个字符不是数字为止:
-                //char peek = it.peekChar();
-//                if(!Character.isDigit(peek)){
-//                    break;
-//                }
-//                char now = it.nextChar();
-//                token.append(now);
                 token+=it.nextChar();
             }
 
             if(it.peekChar() == 'e' || it.peekChar() == 'E'){ //有后面的一串
-                //token.append(it.nextChar());
                 token+=it.nextChar();
                 if(it.peekChar() == '+' || it.peekChar() == '-'){
-                    //token.append(it.nextChar());
                     token+=it.nextChar();
                 }
 
                 while(Character.isDigit(it.peekChar())) {// 直到查看下一个字符不是数字为止:
-//                    char peek = it.peekChar();
-//                    if(!Character.isDigit(peek)){
-//                        break;
-//                    }
-//                    char now = it.nextChar();
-//                    token.append(now);
                     token+=it.nextChar();
                 }
             }
@@ -118,7 +92,6 @@ public class Tokenizer {
     }
 
     private Token lexSTRING() throws TokenizeError {  //判断并返回 字符串常量
-        //token.setLength(0);
         token="";
         Pos start = it.currentPos();
 
@@ -135,7 +108,6 @@ public class Tokenizer {
                 return toke;
             }
             char now = it.nextChar();
-//            System.out.println(now+ " 这轮是你！");
             if(now == '\\'){
                 lexEscape(now);
             }
@@ -146,7 +118,6 @@ public class Tokenizer {
     }
 
     private Token lexCHAR() throws TokenizeError {
-        //token.setLength(0);
         token="";
         Pos start = it.currentPos();
         Token toke = null;
@@ -182,7 +153,6 @@ public class Tokenizer {
                 }
                 it.nextChar();
                 toke = new Token(TokenType.CHAR_LITERAL, cur, start, it.currentPos());
-                //return toke;
             }
         }
         else{
@@ -203,27 +173,21 @@ public class Tokenizer {
         boolean matches = mat.matches();
         if(matches){
             if(peek == '\\'){
-                //token.append('\\');
                 token+='\\';
             }
             if(peek == 'n'){
-                //token.append('\n');
                 token+='\n';
             }
             if(peek == 't'){
-                //token.append('\t');
                 token+='\t';
             }
             if(peek == '"'){
-                //token.append('"');
                 token+='"';
             }
             if(peek == 'r'){
-                //token.append('\r');
                 token+='\r';
             }
             if(peek == '\''){
-                //token.append('\'');
                 token+='\'';
             }
             it.nextChar();
@@ -259,12 +223,6 @@ public class Tokenizer {
         token="";
 
         while(Character.isLetterOrDigit(it.peekChar())||it.peekChar()=='_'){
-//            char peek = it.peekChar();
-//            if(!Character.isLetterOrDigit(peek) && peek != '_'){
-//                break;
-//            }
-//            char now = it.nextChar();
-//            token.append(now);
             token+=it.nextChar();
         }
         if(token.length() != 0){
@@ -289,7 +247,6 @@ public class Tokenizer {
 
             case '-':
                 // 填入返回语句
-                //throw new Error("Not implemented");
                 if(it.peekChar() == '>'){
                     it.nextChar();
                     return new Token(TokenType.ARROW, "->", it.previousPos(), it.currentPos());
