@@ -1,0 +1,12 @@
+begin
+    const c1->-5;
+    const c2=+5;
+    const c=5;
+    var a=0;
+    var b;
+    ;
+    ;
+    a = 2*5*10;
+    b=a+c1*(c2--c);
+    print(a);
+end
