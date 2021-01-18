@@ -4,26 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 public class Output {
-    public static byte[] intToByte(int v) {
-        byte[] a = new byte[4];
-        a[3] = (byte) (v & 0xff);
-        a[2] = (byte) ((v >> 8) & 0xff);
-        a[1] = (byte) ((v >> 16) & 0xff);
-        a[0] = (byte) ((v >> 24) & 0xff);
-        return a;
-    }
-    public static byte[] longToByte(long v) {
-        byte[] a = new byte[8];
-        a[7] = (byte) (v & 0xff);
-        a[6] = (byte) ((v >> 8) & 0xff);
-        a[5] = (byte) ((v >> 16) & 0xff);
-        a[4] = (byte) ((v >> 24) & 0xff);
-        a[3] = (byte) ((v >> 32) & 0xff);
-        a[2] = (byte) ((v >> 40) & 0xff);
-        a[1] = (byte) ((v >> 48) & 0xff);
-        a[0] = (byte) ((v >> 56) & 0xff);
-        return a;
-    }
+
     public static void Output(String name, ArrayList<String> global, ArrayList<FnInstruction> fnList) throws Exception{
         FileOutputStream f = new FileOutputStream(new File(name));
         f.write(intToByte(0x72303b3e));
@@ -71,5 +52,25 @@ public class Output {
                 }
             }
         }
+    }
+    public static byte[] intToByte(int v) {
+        byte[] a = new byte[4];
+        a[3] = (byte) (v & 0xff);
+        a[2] = (byte) ((v >> 8) & 0xff);
+        a[1] = (byte) ((v >> 16) & 0xff);
+        a[0] = (byte) ((v >> 24) & 0xff);
+        return a;
+    }
+    public static byte[] longToByte(long v) {
+        byte[] a = new byte[8];
+        a[7] = (byte) (v & 0xff);
+        a[6] = (byte) ((v >> 8) & 0xff);
+        a[5] = (byte) ((v >> 16) & 0xff);
+        a[4] = (byte) ((v >> 24) & 0xff);
+        a[3] = (byte) ((v >> 32) & 0xff);
+        a[2] = (byte) ((v >> 40) & 0xff);
+        a[1] = (byte) ((v >> 48) & 0xff);
+        a[0] = (byte) ((v >> 56) & 0xff);
+        return a;
     }
 }

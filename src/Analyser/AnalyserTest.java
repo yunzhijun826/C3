@@ -16,8 +16,8 @@ public class AnalyserTest {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        StringIter x = new StringIter(sc);
-        Tokenizer tokenizer = new Tokenizer(x);
+        StringIter it = new StringIter(sc);
+        Tokenizer tokenizer = new Tokenizer(it);
         return tokenizer;
     }
     @Test
