@@ -151,7 +151,6 @@ public class Analyser {
             throw new AnalyzeError(ErrorCode.DuplicateDeclaration, curPos);
         }
         else if(this.symbolHash.get(name) != null){
-          //如果读到的在之前的块里出现过
                 int chain = this.symbolHash.get(name);
                 switch (symbolType) {
                     case args:
@@ -160,10 +159,10 @@ public class Analyser {
 
                     case global:
                         this.symbolTable.push(new Symbol(name, chain, tokenType, isConstant, symbolType, globalOffset++));
-                        if(isConstant){
-                            GlobalVariable.add("0");
-                        }else{
+                        if(!isConstant){
                             GlobalVariable.add("1");
+                        }else{
+                            GlobalVariable.add("0");
                         }
                         break;
 
@@ -183,10 +182,10 @@ public class Analyser {
 
                 case global:
                     this.symbolTable.push(new Symbol(name, -1, tokenType, isConstant, symbolType, globalOffset++));
-                    if(isConstant){
-                        GlobalVariable.add("0");
-                    }else{
+                    if(!isConstant){
                         GlobalVariable.add("1");
+                    }else{
+                        GlobalVariable.add("0");
                     }
                     break;
 
@@ -227,13 +226,13 @@ public class Analyser {
 
         analyseMain();
         expect(TokenType.EOF);
-        System.out.println();
-        for (String s : GlobalVariable) {
-            System.out.println(s);
-        }
-        for (FnInstruction fnList : fnLists) {
-            System.out.println(fnList.toString());
-        }
+        //System.out.println();
+//        for (String s : GlobalVariable) {
+//            System.out.println(s);
+//        }
+//        for (FnInstruction fnList : fnLists) {
+//            System.out.println(fnList.toString());
+//        }
         Output.Output(name, GlobalVariable, fnLists); //转二进制
     }
 
@@ -260,10 +259,10 @@ public class Analyser {
                 analyseVariableDeclaration(true);
             }
             else if (check(TokenType.FN_KW)) { //如果下一个token是fn，则前进一个token，并返回这个token（fn），此时应进入function分析过程
-                System.out.println("进入fn了噢");
+               // System.out.println("进入fn了噢");
                 analyseFunctionDeclaration(); //进入function分析过程
             } else {
-                System.out.println("主过程错啦，既不是变量也不是常量！");
+               // System.out.println("主过程错啦，既不是变量也不是常量！");
                 break;
 //                throw new AnalyzeError(ErrorCode.InvalidAssignment, );
             }
@@ -307,10 +306,7 @@ public class Analyser {
             CurrentFnInstruction.add(new Instruction(Operation.loca, localOffset));
         }
 
-        // 冒号
         expect(TokenType.COLON);
-
-        // ty
         Token couToken = expect(TokenType.IDENT);
         if(couToken.getValue().equals("double")){
             couToken.setTokenType(TokenType.DOUBLE);
@@ -322,14 +318,11 @@ public class Analyser {
             throw new AnalyzeError(ErrorCode.NotDeclared, couToken.getStartPos());
         }
 
-
-        // =
         expect(TokenType.ASSIGN);
 
-        // expr
-        TokenType t = analyseExpr(true);
+        TokenType tT = analyseExpr(true);
 
-        if(couToken.getTokenType() != t){ //ty '=' expr 类型是否相同
+        if(couToken.getTokenType() != tT){ //ty '=' expr 类型是否相同
             throw new AnalyzeError(ErrorCode.NotDeclared, couToken.getStartPos());
         }
 
@@ -344,10 +337,6 @@ public class Analyser {
         } else {
             addSymbol(name, true, couToken.getTokenType(), SymbolType.global, nameToken.getStartPos());
         }
-
-        //TODO
-        //入栈
-//        instructions.add(new Instruction());
     }
 
     /**
@@ -357,26 +346,51 @@ public class Analyser {
      */
     private void analyseVariableDeclaration(boolean isGlobal) throws CompileError {
         //let_decl_stmt -> 'let' IDENT ':' ty ('=' expr)? ';'
-
+        // 如果下一个 token 是 var 就继续
+//        while (nextIf(TokenType.Var) != null) {
+//            // 变量声明语句 -> 'var' 变量名 ('=' 表达式)? ';'
+//
+//            // 变量名
+//            var nameToken = expect(TokenType.Ident);
+//
+//            // 变量初始化了吗
+//            boolean initialized = false;
+//
+//            // 下个 token 是等于号吗？如果是的话分析初始化
+//            if(nextIf(TokenType.Equal)!=null){
+//                initialized=true;
+//                analyseExpression();
+//            }
+//
+//            // 分析初始化的表达式
+//
+//            // 分号
+//            expect(TokenType.Semicolon);
+//
+//            // 加入符号表，请填写名字和当前位置（报错用）
+//            //String name = /* 名字 */ null;
+//            String name = (String) nameToken.getValue();
+//            //addSymbol(name, false, false, /* 当前位置 */ null);
+//            addSymbol(name, initialized, false, nameToken.getStartPos());
+//            // 如果没有初始化的话在栈里推入一个初始值
+//            if (!initialized) {
+//                instructions.add(new Instruction(Operation.LIT, 0));
+//            }
+//        }
         expect(TokenType.LET_KW);
 
         Token nameToken = expect(TokenType.IDENT);
-
-
-        //冒号
         expect(TokenType.COLON);
-
-        // ty
-        Token tyToken = expect(TokenType.IDENT);
-        System.out.println(tyToken.getValue());
-        if(tyToken.getValue().equals("double")){
-            tyToken.setTokenType(TokenType.DOUBLE);
+        Token couToken = expect(TokenType.IDENT);
+        System.out.println(couToken.getValue());
+        if(couToken.getValue().equals("double")){
+            couToken.setTokenType(TokenType.DOUBLE);
         }
-        else if(tyToken.getValue().equals("int")){
-            tyToken.setTokenType(TokenType.INT);
+        else if(couToken.getValue().equals("int")){
+            couToken.setTokenType(TokenType.INT);
         }
         else{
-            throw new AnalyzeError(ErrorCode.NotDeclared, tyToken.getStartPos());
+            throw new AnalyzeError(ErrorCode.NotDeclared, couToken.getStartPos());
         }
 
         if (nextIf(TokenType.ASSIGN) != null) {
@@ -385,36 +399,23 @@ public class Analyser {
             }else{
                 CurrentFnInstruction.add(new Instruction(Operation.globa, globalOffset));
             }
-            TokenType t = analyseExpr(true);
-            if(tyToken.getTokenType() != t){ //ty ('=' expr)?
-                throw new AnalyzeError(ErrorCode.NotDeclared, tyToken.getStartPos());
+            TokenType tt = analyseExpr(true);
+            if(couToken.getTokenType() != tt){ //ty ('=' expr)?
+                throw new AnalyzeError(ErrorCode.NotDeclared, couToken.getStartPos());
             }
             CurrentFnInstruction.add(new Instruction(Operation.store64));
         }
 
-
-        // ;
         expect(TokenType.SEMICOLON);
 
-
-        //TODO
-        //加入符号表
         if (!isGlobal) {
-            addSymbol(nameToken.getValue().toString(), false, tyToken.getTokenType(), SymbolType.local, nameToken.getStartPos());
+            addSymbol(nameToken.getValue().toString(), false, couToken.getTokenType(), SymbolType.local, nameToken.getStartPos());
         } else {
-            addSymbol(nameToken.getValue().toString(), false, tyToken.getTokenType(), SymbolType.global, nameToken.getStartPos());
+            addSymbol(nameToken.getValue().toString(), false, couToken.getTokenType(), SymbolType.global, nameToken.getStartPos());
 
         }
-
-
-        // TODO
-        //入栈
-//        instructions.add(new Instruction());
     }
 
-    /**
-     * function的分析过程
-     */
     private void analyseFunctionDeclaration() throws CompileError {
         //function -> 'fn' IDENT '(' function_param_list? ')' '->' ty block_stmt
 
@@ -430,37 +431,21 @@ public class Analyser {
         GlobalVariable.add(nameToken.getValue().toString()); //存入全局变量表
         fnInstruction.setName(globalOffset++); //取现在的globalOffset再加一
 
-        System.out.println("fn名字： " + nameToken);
-
+       // System.out.println("fn名字： " + nameToken);
         if(nameToken.getValue().toString().equals("main")){
             hasMain = true;
             fnPos = fnLists.size()-1;
         }
         Symbol currentSymbol = addFnSymbol(nameToken.getValue().toString(), nameToken.getStartPos()); //加入符号表
 
-
-        // (
         expect(TokenType.L_PAREN);
-
-
-        //参数offset清零
         argsOffset = 0;
-
-        //function_param_list
         if (check(TokenType.CONST_KW) || check(TokenType.IDENT)) {
             analyseFunctionParamList();
         }
-
-
-
-
         expect(TokenType.R_PAREN);
-
         expect(TokenType.ARROW);
-
-        // ty
         Token couToken = expect(TokenType.IDENT);
-
         if(couToken.getValue().equals("double")){
             couToken.setTokenType(TokenType.DOUBLE);
             fnInstruction.setRet_slots(1);
@@ -474,7 +459,8 @@ public class Analyser {
         else if(couToken.getValue().equals("int")){
             couToken.setTokenType(TokenType.INT);
             fnInstruction.setRet_slots(1); //return数量置1
-            for(int i = symbolTable.size()-1; symbolTable.get(i).getSymbolType() == SymbolType.args; i--){
+            int size=symbolTable.size()-1;
+            for(int i = size; symbolTable.get(i).getSymbolType() == SymbolType.args; i--){
                 symbolTable.get(i).setOffset(symbolTable.get(i).getOffset()+1);
             }
             if(nameToken.getValue().toString().equals("main")){
@@ -494,7 +480,6 @@ public class Analyser {
 
 
         fnInstruction.setParam_slots(argsOffset); //设置参数数量
-
         currentSymbol.setType(couToken.getTokenType()); //fn的type属性
 
         // block_stmt
@@ -502,10 +487,11 @@ public class Analyser {
         hasReturn = analyseBlockStmt(true, couToken.getTokenType(), false, null, -1);
         fnInstruction.setLoc_slots(localOffset);
 
-        if(couToken.getTokenType()!=TokenType.VOID && !hasReturn){ //如果是fn 需要有return
-            throw new AnalyzeError(ErrorCode.DuplicateDeclaration, new Pos(0,0));
-        }else if(couToken.getTokenType()==TokenType.VOID && !hasReturn){
+        if(couToken.getTokenType()==TokenType.VOID && !hasReturn){
             CurrentFnInstruction.add(new Instruction(Operation.ret));
+        }
+        else if(couToken.getTokenType()!=TokenType.VOID && !hasReturn){ //如果是fn 需要有return
+            throw new AnalyzeError(ErrorCode.DuplicateDeclaration, new Pos(0,0));
         }
 
         fnInstruction.setBodyCount(fnInstruction.getBodyItem().size());
@@ -517,24 +503,23 @@ public class Analyser {
     private TokenType analyseExpr(boolean f) throws CompileError {
         //expr->(negate_expr| assign_expr | call_expr | literal_expr | ident_expr | group_expr) {binary_operator expr|'as' ty}
 
-        System.out.println("开始分析expr");
-        TokenType type = null;
+       // System.out.println("开始分析expr");
+        TokenType tokenType = null;
 
         //negate_expr
         if (check(TokenType.MINUS)) {
-            System.out.println("这是negate_expr");
-            type = analyseNegateExpr();
-            if(type == TokenType.DOUBLE){
+            //System.out.println("这是negate_expr");
+            tokenType = analyseNegateExpr();
+            if(tokenType == TokenType.DOUBLE){
                 CurrentFnInstruction.add(new Instruction(Operation.negf));
             }
-            else if(type == TokenType.INT){
+            else if(tokenType == TokenType.INT){
                 CurrentFnInstruction.add(new Instruction(Operation.negi));
             }else{
                 throw new AnalyzeError(ErrorCode.NotDeclared, new Pos(3,0));
             }
-            System.out.println("negate_expr结束啦");
+            //System.out.println("negate_expr结束啦");
         }
-
         //assign | call | ident分析
         if (peek().getTokenType() == TokenType.IDENT) {
             Token nameToken = next();
@@ -543,294 +528,274 @@ public class Analyser {
             Integer index = symbolHash.get(nameToken.getValue().toString());
 
             if (nextIf(TokenType.ASSIGN) != null) {  //assign
-
                 if (index == null) { //符号表没有这个符号
                     throw new AnalyzeError(ErrorCode.NotDeclared, nameToken.getStartPos());
                 }
-
                 if(symbolTable.get(index).isConst()){
                     throw new AnalyzeError(ErrorCode.NotDeclared, nameToken.getStartPos());
                 }
-
-                if(symbolTable.get(index).getSymbolType() == SymbolType.global){
-                    CurrentFnInstruction.add(new Instruction(Operation.globa, symbolTable.get(index).getOffset()));
-                }
-                else if(symbolTable.get(index).getSymbolType() == SymbolType.local){ //是局部变量
+                if(symbolTable.get(index).getSymbolType() == SymbolType.local){ //是局部变量
                     CurrentFnInstruction.add(new Instruction(Operation.loca, symbolTable.get(index).getOffset()));
+                }
+                else if(symbolTable.get(index).getSymbolType() == SymbolType.global){
+                    CurrentFnInstruction.add(new Instruction(Operation.globa, symbolTable.get(index).getOffset()));
                 }
                 else{
                     CurrentFnInstruction.add(new Instruction(Operation.arga, symbolTable.get(index).getOffset()));
                 }
 
                 TokenType l_type = symbolTable.get(index).getType(); //取l_expr的类型
-                System.out.println("这是assign_expr");
+                //System.out.println("这是assign_expr");
                 TokenType r_type = analyseExpr(true); //r_expr的类型
 
                 if (l_type != r_type) { //如果不相等 语义报错
                     throw new AnalyzeError(ErrorCode.NotDeclared, nameToken.getStartPos());
                 }
-
                 CurrentFnInstruction.add(new Instruction(Operation.store64));
-                type = TokenType.VOID; //赋值表达式的值类型永远是 void
-                System.out.println("assign_expr结束啦");
-            } else if (nextIf(TokenType.L_PAREN) != null) { //call
-                System.out.println("这是call_expr");
-
+                tokenType = TokenType.VOID; //赋值表达式的值类型永远是 void
+                //System.out.println("assign_expr结束啦");
+            }
+            else if (nextIf(TokenType.L_PAREN) != null) { //call
+                //System.out.println("这是call_expr");
                 int currentGlobal = 0;
-                ArrayList<TokenType> call_array = null;
-                TokenType return_type;
+                ArrayList<TokenType> callArray = null;
+                TokenType returnType;
 
                 if (index == null) {
-                    switch (nameToken.getValue().toString()) {
+                    String s=nameToken.getValue().toString();
+                    switch (s) {
                         case "getint":
                         case "getchar":
-                            call_array = new ArrayList<TokenType>();
-                            return_type = TokenType.INT;
+                            callArray = new ArrayList<TokenType>();
+                            returnType = TokenType.INT;
                             break;
                         case "getdouble":
-                            call_array = new ArrayList<TokenType>();
-                            return_type = TokenType.DOUBLE;
+                            callArray = new ArrayList<TokenType>();
+                            returnType = TokenType.DOUBLE;
                             break;
                         case "putint":
-                            call_array = new ArrayList<TokenType>() {{
+                            callArray = new ArrayList<TokenType>() {{
                                 add(TokenType.INT);
                             }};
-                            return_type = TokenType.VOID;
+                            returnType = TokenType.VOID;
                             break;
                         case "putdouble":
-                            call_array = new ArrayList<TokenType>() {{
+                            callArray = new ArrayList<TokenType>() {{
                                 add(TokenType.DOUBLE);
                             }};
-                            return_type = TokenType.VOID;
+                            returnType = TokenType.VOID;
                             break;
                         case "putchar":
-                            call_array = new ArrayList<TokenType>() {{
+                            callArray = new ArrayList<TokenType>() {{
                                 add(TokenType.INT);
                             }};
-                            return_type = TokenType.VOID;
+                            returnType = TokenType.VOID;
                             break;
                         case "putstr":
-                            call_array = new ArrayList<TokenType>() {{
+                            callArray = new ArrayList<TokenType>() {{
                                 add(TokenType.INT);
                             }};
-                            return_type = TokenType.VOID;
+                            returnType = TokenType.VOID;
                             break;
                         case "putln":
-                            call_array = new ArrayList<TokenType>();
-                            return_type = TokenType.VOID;
+                            callArray = new ArrayList<TokenType>();
+                            returnType = TokenType.VOID;
                             break;
                         default:
                             throw new AnalyzeError(ErrorCode.NotDeclared, nameToken.getStartPos());
                     }
                     GlobalVariable.add(nameToken.getValue().toString()); //把标准库函数存入全局变量
                     currentGlobal = globalOffset ++;
-                } else { //取到参数列表和返回类型
-                    Symbol call_index = symbolTable.get(index);
-                    call_array = call_index.getParams();
-                    return_type = call_index.getType();
-                    System.out.println("此时调用的函数： "+ call_index.getName());
-                    System.out.println("返回类型： "+call_index.getType());
+                }
+                else { //取到参数列表和返回类型
+                    Symbol callIndex = symbolTable.get(index);
+                    callArray = callIndex.getParams();
+                    returnType = callIndex.getType();
+                    //System.out.println("此时调用的函数： "+ callIndex.getName());
+                    //System.out.println("返回类型： "+ callIndex.getType());
                 }
 
-                if(return_type == TokenType.INT || return_type == TokenType.DOUBLE){ //stackalloc 按返回类型判断
+                if(returnType == TokenType.INT){
                     CurrentFnInstruction.add(new Instruction(Operation.stackalloc, 1));
-                }else if(return_type == TokenType.VOID){
+                }
+                else if(returnType == TokenType.DOUBLE){
+                    CurrentFnInstruction.add(new Instruction(Operation.stackalloc, 1));
+                }
+                else if(returnType == TokenType.VOID){
                     CurrentFnInstruction.add(new Instruction(Operation.stackalloc, 0));
                 }
 
-
-
                 if (nextIf(TokenType.R_PAREN) != null) { //无参数调用
-                    if (call_array.size() != 0) {
+                    if (callArray.size() != 0) {
                         throw new AnalyzeError(ErrorCode.NotDeclared, nameToken.getStartPos());
                     } else {
-                        System.out.println("call_expr结束啦");
-                        type = return_type;
+                        //System.out.println("call_expr结束啦");
+                        tokenType = returnType;
                     }
                 } else { //有参数调用
-                    TokenType param0 = analyseExpr(true); //
+                    TokenType paramT = analyseExpr(true); //
                     int i = 0;
-                    if (param0 != call_array.get(i)) {
-                        System.out.println("param0:"+param0);
-                        System.out.println("call_array get0:" + call_array.get(0));
+                    if (paramT != callArray.get(i)) {
+                        //System.out.println("param0:"+ paramT);
+                        //System.out.println("call_array get0:" + callArray.get(0));
                         throw new AnalyzeError(ErrorCode.NotDeclared, nameToken.getStartPos());
                     }
                     while (nextIf(TokenType.COMMA) != null) {
                         i++;
-                        if (call_array.size() < i) { //参数个数不同 报错
+                        if (callArray.size() < i) { //参数个数不同 报错
                             throw new AnalyzeError(ErrorCode.NotDeclared, nameToken.getStartPos());
                         }
                         TokenType param = analyseExpr(true);
-                        if (param != call_array.get(i)) {
+                        if (param != callArray.get(i)) {
                             throw new AnalyzeError(ErrorCode.NotDeclared, nameToken.getStartPos());
                         }
                     }
                     expect(TokenType.R_PAREN);
-                    System.out.println("call_expr结束啦");
-                    type = return_type;
+                    //System.out.println("call_expr结束啦");
+                    tokenType = returnType;
                 }
-                if(index != null){
-                    CurrentFnInstruction.add(new Instruction(Operation.call, symbolTable.get(index).getFnoffset()));
-                }else{
+                if(index == null){
                     CurrentFnInstruction.add(new Instruction(Operation.callname, currentGlobal));
+                }else{
+                    CurrentFnInstruction.add(new Instruction(Operation.call, symbolTable.get(index).getFnoffset()));
                 }
             } else { //只有IDENT
                 if(index==null&&nameToken.getValue().toString().equals("double")){
-                    type=TokenType.DOUBLE;
+                    tokenType =TokenType.DOUBLE;
                 }
                 else if(index==null&&nameToken.getValue().toString().equals("int")){
-                    type=TokenType.INT;
+                    tokenType =TokenType.INT;
                 }
                 else if (index == null) {
                     throw new AnalyzeError(ErrorCode.NotDeclared, nameToken.getStartPos());
                 }
                 else{
-                    Symbol symbol = symbolTable.get(index);
-
-                    if(symbol.getSymbolType() == SymbolType.local){
-                        CurrentFnInstruction.add(new Instruction(Operation.loca, symbol.getOffset()));
+                    Symbol sym = symbolTable.get(index);
+                    if(sym.getSymbolType() == SymbolType.local){
+                        CurrentFnInstruction.add(new Instruction(Operation.loca, sym.getOffset()));
                     }
-                    else if(symbol.getSymbolType() == SymbolType.global){ //取地址
-                        CurrentFnInstruction.add(new Instruction(Operation.globa, symbol.getOffset()));
+                    else if(sym.getSymbolType() == SymbolType.global){ //取地址
+                        CurrentFnInstruction.add(new Instruction(Operation.globa, sym.getOffset()));
                     }
                     else{
-                        CurrentFnInstruction.add(new Instruction(Operation.arga, symbol.getOffset()));
+                        CurrentFnInstruction.add(new Instruction(Operation.arga, sym.getOffset()));
                     }
-
                     CurrentFnInstruction.add(new Instruction(Operation.load64)); //取值
-
-                    type = symbolTable.get(index).getType();
+                    tokenType = symbolTable.get(index).getType();
                 }
             }
         }
-
-        //literal_expr
         else if (peek().getTokenType() == TokenType.UINT_LITERAL || peek().getTokenType() == TokenType.STRING_LITERAL || peek().getTokenType() == TokenType.DOUBLE_LITERAL || peek().getTokenType() == TokenType.CHAR_LITERAL) {
-            System.out.println("这是literal_expr");
-
+            //System.out.println("这是literal_expr");
             if (peek().getTokenType() == TokenType.UINT_LITERAL) { //是无符号整数
-                System.out.println("这里有个UINT：" + peek());
-
-                type = TokenType.INT;
-
+                //System.out.println("这里有个UINT：" + peek());
+                tokenType = TokenType.INT;
                 CurrentFnInstruction.add(new Instruction(Operation.push, peek().getValue()));
-
                 next();
                 //TODO 注意此时还没有移动指针
-            } else if (peek().getTokenType() == TokenType.STRING_LITERAL) {//是字符串
-                //字符串需要存在全局变量
-                GlobalVariable.add(peek().getValue().toString());
-                globalOffset++;
-                type = TokenType.INT;
-
-                CurrentFnInstruction.add(new Instruction(Operation.push, (long)globalOffset-1));
-
-                System.out.println("这里有个STRING：" + peek());
-                next();
-                //TODO 注意此时还没有移动指针
-            } else if (peek().getTokenType() == TokenType.DOUBLE_LITERAL) { //double
-                System.out.println("这里有个DOUBLE：" + peek());
-                type = TokenType.DOUBLE;
+            }
+            else if (peek().getTokenType() == TokenType.DOUBLE_LITERAL) { //double
+                //System.out.println("这里有个DOUBLE：" + peek());
+                tokenType = TokenType.DOUBLE;
 
                 CurrentFnInstruction.add(new Instruction(Operation.push, Double.doubleToRawLongBits((double)peek().getValue())));
 
                 next();
                 //TODO 注意此时还没有移动指针
-            } else if (peek().getTokenType() == TokenType.CHAR_LITERAL) { //char
+            }
+            else if (peek().getTokenType() == TokenType.STRING_LITERAL) {//是字符串
+                //字符串需要存在全局变量
+                GlobalVariable.add(peek().getValue().toString());
+                globalOffset++;
+                tokenType = TokenType.INT;
+                CurrentFnInstruction.add(new Instruction(Operation.push, (long)globalOffset-1));
+                //System.out.println("这里有个STRING：" + peek());
+                next();
+                //TODO 注意此时还没有移动指针
+            }
+            else if (peek().getTokenType() == TokenType.CHAR_LITERAL) { //char
 
-                System.out.println("这里有个CHAR：" + peek());
+                //System.out.println("这里有个CHAR：" + peek());
 
-                type = TokenType.INT;
+                tokenType = TokenType.INT;
 
                 CurrentFnInstruction.add(new Instruction(Operation.push, (long)(char)peek().getValue()));
 
                 next();
             }
-            System.out.println("literal_expr结束啦");
+            //System.out.println("literal_expr结束啦");
         }
 
         //group_expr
         else if (check(TokenType.L_PAREN)) {
-            System.out.println("这是group_expr");
-            type = analyseGroupExpr();
-            System.out.println("group分析完之后需要重新入栈的：" + type);
-            System.out.println(f);
+            //System.out.println("这是group_expr");
+            tokenType = analyseGroupExpr();
+            //System.out.println("group分析完之后需要重新入栈的：" + tokenType);
+            //System.out.println(f);
         }
 
         if (f) { //OPG 判断operator_expr 和 as_expr
             Stack stack = new Stack();
             stack.push('#');
-            Stack Nstack = new Stack<>();
-            if (type != null) {
-                Nstack.push(type);
-                System.out.println("push了（外层）：" + type);
-                System.out.println("此时Nstack栈：" + Nstack);
+            Stack stack2 = new Stack<>();
+            if (tokenType != null) {
+                stack2.push(tokenType);
+                //System.out.println("push了（外层）：" + tokenType);
+                //System.out.println("此时Nstack栈：" + Nstack);
             }
             while (check(TokenType.AS_KW) || check(TokenType.PLUS) || check(TokenType.MINUS) || check(TokenType.MUL) || check(TokenType.DIV) || check(TokenType.EQ) || check(TokenType.NEQ) || check(TokenType.LT) || check(TokenType.GT) || check(TokenType.LE) || check(TokenType.GE)) {
-                OPGAnalyse(stack, Nstack);
-                TokenType second_type = analyseExpr(false);
-
-                if (second_type != null) {
-                    Nstack.push(second_type);
-                    System.out.println("push了（内层）：" + second_type);
-                    System.out.println("此时Nstack栈：" + Nstack);
-                    second_type = null; //还原
+                OPGAnalyse(stack, stack2);
+                TokenType secondType = analyseExpr(false);
+                if (secondType != null) {
+                    stack2.push(secondType);
+                    //System.out.println("push了（内层）：" + second_type);
+                    //System.out.println("此时Nstack栈：" + Nstack);
+                    secondType = null; //还原
                 }
 
             }
             int sch = Symbol.indexOf(stack.peek());
             int ch = Symbol.indexOf(peek().getTokenType());
             while ((ch == -1 || SymbolMatrix[sch][ch] == 1) && stack.size() > 1) { //栈内大于当前 规约
-                reduction(stack, Nstack);
+                reduction(stack, stack2);
             }
-            type = (TokenType) Nstack.pop();
+            tokenType = (TokenType) stack2.pop();
         }
-        return type;
+        return tokenType;
     }
 
-    /**
-     * OPGAnalyse
-     */
-    private void OPGAnalyse(Stack<TokenType> s, Stack Ns) throws TokenizeError {
-        System.out.println("OPG开始分析");
+    private void OPGAnalyse(Stack<TokenType> s, Stack s2) throws TokenizeError {
+        //System.out.println("OPG开始分析");
         while (true) { //栈内大于当前 规约
             int sch = Symbol.indexOf(s.peek());
             int ch = Symbol.indexOf(peek().getTokenType());
-
-
             if (sch == -1 && ch == -1) { //都为#
-                System.out.println("没有符号可以规约啦 都是# 结束！");
+                //System.out.println("没有符号可以规约啦 都是# 结束！");
                 return;
-            } else if (sch == -1 || SymbolMatrix[sch][ch] == 0) { //栈内优先级小于当前字符 入栈
-                System.out.println("栈内的符号：" + s.peek() + " 栈外的符号：" + peek().getTokenType() + " 栈内优先级小于栈外，入栈！");
+            }
+            else if (sch == -1 || SymbolMatrix[sch][ch] == 0) { //栈内优先级小于当前字符 入栈
+                //System.out.println("栈内的符号：" + s.peek() + " 栈外的符号：" + peek().getTokenType() + " 栈内优先级小于栈外，入栈！");
                 s.push(Symbol.get(ch));
-
                 next();
-                System.out.println("此时栈中符号：" + s);
+                //System.out.println("此时栈中符号：" + s);
                 return;
-            } else if((ch == -1 || SymbolMatrix[sch][ch] == 1) && s.size() > 1){
-                System.out.println("站内符号：" + s.peek() + " 栈外符号：" + peek().getTokenType() + " 要规约了");
-                reduction(s, Ns);
+            }
+            else if((ch == -1 || SymbolMatrix[sch][ch] == 1) && s.size() > 1){
+                //System.out.println("站内符号：" + s.peek() + " 栈外符号：" + peek().getTokenType() + " 要规约了");
+                reduction(s, s2);
             }
         }
     }
 
-    /**
-     * reduction 规约
-     */
     private void reduction(Stack<TokenType> s, Stack<Object> Ns) {
-        System.out.println("规约了！");
-
-        System.out.println("这时的非终结符栈：" + Ns);
-        System.out.println("这时的符号栈：" + s);
+//        System.out.println("规约了！");
+//
+//        System.out.println("这时的非终结符栈：" + Ns);
+//        System.out.println("这时的符号栈：" + s);
         TokenType pop = s.pop(); //符号栈弹一个
-
         TokenType pop2 = (TokenType) Ns.pop(); //非终结符栈弹两个
-
         TokenType pop1 = (TokenType) Ns.pop();
-
         TokenType push = null;
-
         if (pop == TokenType.AS_KW) { //as指令分析
             if (pop1 == TokenType.DOUBLE || pop1 == TokenType.INT) {
                 if (pop2 == TokenType.DOUBLE) {
@@ -852,8 +817,6 @@ public class Analyser {
             if (pop1 != pop2) {
                 System.exit(-1);
             }
-
-
             switch (pop) { //
                 case PLUS:
                     if(pop1 == TokenType.INT){
@@ -964,37 +927,26 @@ public class Analyser {
             }
         }
 
-        System.out.println("pop后的Ns： " + Ns);
-        System.out.println("pop后的s: " + s);
-
-
+//        System.out.println("pop后的Ns： " + Ns);
+//        System.out.println("pop后的s: " + s);
         Ns.push(push);
 
-        System.out.println("push N规约后 此时假装他是个IDENT,此时Ns：" + Ns);
+     //   System.out.println("push N规约后 此时假装他是个IDENT,此时Ns：" + Ns);
     }
 
-    /**
-     * negate_expr
-     */
     private TokenType analyseNegateExpr() throws CompileError {
         expect(TokenType.MINUS);
         return analyseExpr(true);
     }
 
-    /**
-     * analyseGroupExpr
-     */
     private TokenType analyseGroupExpr() throws CompileError {
         expect(TokenType.L_PAREN);
         TokenType tokenType = analyseExpr(true);
         expect(TokenType.R_PAREN);
-        System.out.println("group 分析完了！！！");
+        //System.out.println("group 分析完了！！！");
         return tokenType;
     }
 
-    /**
-     * function_param_list分析入口
-     */
     private void analyseFunctionParamList() throws CompileError {
         //function_param_list -> function_param (',' function_param)*
         //function_param -> 'const'? IDENT ':' ty
@@ -1005,9 +957,6 @@ public class Analyser {
         }
     }
 
-    /**
-     * function_param分析
-     */
     private void analyseFunctionParam() throws CompileError {
         //function_param -> 'const'? IDENT ':' ty
         if (nextIf(TokenType.CONST_KW) != null) { //如果有const，说明为常量
@@ -1032,35 +981,29 @@ public class Analyser {
 
 
             //TODO
-        } else { //没有const说明为变量
+        }
+        else { //没有const说明为变量
             Token nameToken = expect(TokenType.IDENT); //取常量名
             expect(TokenType.COLON); // :
-            Token tyToken = expect(TokenType.IDENT); //取常量值
-
-            switch (tyToken.getValue().toString()) {
-                case "double":
-                    //加入符号表
-                    addSymbol(nameToken.getValue().toString(), false, TokenType.DOUBLE, SymbolType.args, nameToken.getStartPos()); //常量加入符号栈
-                    this.symbolTable.get(this.symbolInt.peek() - 1).getParams().add(TokenType.DOUBLE); //把形参放进fn的paramlist
-                    break;
+            Token couToken = expect(TokenType.IDENT); //取常量值
+            switch (couToken.getValue().toString()) {
                 case "int":
                     //加入符号表
                     addSymbol(nameToken.getValue().toString(), false, TokenType.INT, SymbolType.args, nameToken.getStartPos()); //常量加入符号栈
                     this.symbolTable.get(this.symbolInt.peek() - 1).getParams().add(TokenType.INT);
                     break;
+                case "double":
+                    //加入符号表
+                    addSymbol(nameToken.getValue().toString(), false, TokenType.DOUBLE, SymbolType.args, nameToken.getStartPos()); //常量加入符号栈
+                    this.symbolTable.get(this.symbolInt.peek() - 1).getParams().add(TokenType.DOUBLE); //把形参放进fn的paramlist
+                    break;
                 default:
                     throw new AnalyzeError(ErrorCode.DuplicateDeclaration, nameToken.getStartPos());
-
-
-                    //TODO
+  //TODO
             }
         }
     }
 
-
-    /**
-     * stmt
-     */
     private boolean analyseStmt(TokenType tyTokenType, boolean isWhile , ArrayList<Integer> breakEndPos, int continuePos) throws CompileError {
         //stmt ->
         //      expr_stmt
@@ -1075,37 +1018,37 @@ public class Analyser {
 
         //expr_stmt
         if (check(TokenType.MINUS) || check(TokenType.IDENT) || check(TokenType.UINT_LITERAL) || check(TokenType.L_PAREN) || check(TokenType.DOUBLE_LITERAL) || check(TokenType.STRING_LITERAL) || check(TokenType.CHAR_LITERAL)) { //expr_stmt
-            System.out.println("expr_stmt分析");
+            //System.out.println("expr_stmt分析");
             analyseExprStmt();
         }
 
         //decl_stmt
         if (check(TokenType.CONST_KW)) { //decl_stmt
-            System.out.println("decl语句开始分析");
+            //System.out.println("decl语句开始分析");
             analyseConstDeclaration(false);
         }
 
         //let_stmt
         if (check(TokenType.LET_KW)) {
-            System.out.println("let语句开始分析");
+            //System.out.println("let语句开始分析");
             analyseVariableDeclaration(false);
         }
 
         //if_stmt
         if (check(TokenType.IF_KW)) { //if_stmt
-            System.out.println("if语句开始分析");
+            //System.out.println("if语句开始分析");
             return analyseIfStmt(tyTokenType, isWhile, breakEndPos, continuePos);
         }
 
         //while_stmt
         if (check(TokenType.WHILE_KW)) {
-            System.out.println("while语句开始分析");
+            //System.out.println("while语句开始分析");
             analyseWhileStmt(tyTokenType);
         }
 
         //break_stmt
         if (check(TokenType.BREAK_KW)) {
-            System.out.println("break语句开始分析");
+            //System.out.println("break语句开始分析");
             if(!isWhile){
                 throw new AnalyzeError(ErrorCode.DuplicateDeclaration, new Pos(2,0));
             }
@@ -1117,7 +1060,7 @@ public class Analyser {
 
         //continue_stmt
         if (check(TokenType.CONTINUE_KW)) {
-            System.out.println("continue语句开始分析");
+            //System.out.println("continue语句开始分析");
             if(!isWhile){
                 throw new AnalyzeError(ErrorCode.DuplicateDeclaration, new Pos(2,0));
             }
@@ -1127,63 +1070,52 @@ public class Analyser {
 
         //return_stmt
         if (check(TokenType.RETURN_KW)) {
-            System.out.println("return 语句开始分析");
+            //System.out.println("return 语句开始分析");
             analyseReturnStmt(tyTokenType);
             return true; //有return
         }
 
         //block_stmt
         if (check(TokenType.L_BRACE)) {
-            System.out.println("block语句开始分析");
+            //System.out.println("block语句开始分析");
             return analyseBlockStmt(false, tyTokenType, isWhile, breakEndPos, continuePos);
         }
 
         //empty_stmt
         if (check(TokenType.SEMICOLON)) {
-            System.out.println("empty语句开始分析");
+            //System.out.println("empty语句开始分析");
             analyseEmptyStmt();
         }
         return false;
     }
 
-
-    /**
-     * empty_stmt
-     *
-     * @throws CompileError
-     */
     private void analyseEmptyStmt() throws CompileError {
         //empty_stmt -> ';'
         expect(TokenType.SEMICOLON);
     }
 
-    /**
-     * block_stmt
-     *
-     * @throws CompileError
-     */
     private boolean analyseBlockStmt(boolean isFn, TokenType tyTokenType, boolean isWhile, ArrayList<Integer> breakEndPos, int continuePos) throws CompileError {
         //block_stmt -> '{' stmt* '}'
         boolean hasReturn = false;
         expect(TokenType.L_BRACE);
 
         if (!isFn) {
-            symbolInt.push(symbolTable.size());
+            int size=symbolTable.size();
+            symbolInt.push(size);
         }
-        System.out.println(check(TokenType.MINUS));
+        //System.out.println(check(TokenType.MINUS));
         while (check(TokenType.MINUS) || check(TokenType.IDENT) || check(TokenType.UINT_LITERAL) || check(TokenType.DOUBLE_LITERAL) || check(TokenType.STRING_LITERAL) || check(TokenType.CHAR_LITERAL) || check(TokenType.L_PAREN) || check(TokenType.LET_KW) ||
                 check(TokenType.CONST_KW) || check(TokenType.IF_KW) || check(TokenType.WHILE_KW) || check(TokenType.BREAK_KW) || check(TokenType.CONTINUE_KW) || check(TokenType.RETURN_KW) || check(TokenType.SEMICOLON) || check(TokenType.L_BRACE)) {
 //            System.out.println("这是block里的stmt循环分析！");
-            if(!hasReturn){
-                hasReturn = analyseStmt(tyTokenType, isWhile, breakEndPos, continuePos);//进入stmt循环分析
+            if(hasReturn){
+                analyseStmt(tyTokenType, isWhile, breakEndPos, continuePos);
             }
             else{
-                analyseStmt(tyTokenType, isWhile, breakEndPos, continuePos); //进入stmt循环分析
+                hasReturn = analyseStmt(tyTokenType, isWhile, breakEndPos, continuePos);
             }
         }
         expect(TokenType.R_BRACE);
 
-        //删块
         int index = symbolInt.pop();
         while (symbolTable.size() > index) {
             Symbol s = symbolTable.pop();
@@ -1197,9 +1129,6 @@ public class Analyser {
         return hasReturn;
     }
 
-    /**
-     * return_stmt
-     */
     private void analyseReturnStmt(TokenType tyTokenType) throws CompileError {
         //return_stmt -> 'return' expr? ';'
         expect(TokenType.RETURN_KW);
@@ -1211,7 +1140,8 @@ public class Analyser {
             if(exprType != tyTokenType){
                 throw new AnalyzeError(ErrorCode.DuplicateDeclaration, new Pos(1,0));
             }
-        }else{
+        }
+        else{
             if(tyTokenType != TokenType.VOID){
                 throw new AnalyzeError(ErrorCode.DuplicateDeclaration, new Pos(1,0));
             }
@@ -1223,122 +1153,98 @@ public class Analyser {
         expect(TokenType.SEMICOLON);
     }
 
-    /**
-     * continue_stmt
-     */
     private void analyseContinueStmt() throws CompileError {
         //continue_stmt -> 'continue' ';'
         expect(TokenType.CONTINUE_KW);
         expect(TokenType.SEMICOLON);
     }
 
-    /**
-     * break_stmt
-     */
     private void analyseBreakStmt() throws CompileError {
         //break_stmt -> 'break' ';'
         expect(TokenType.BREAK_KW);
         expect(TokenType.SEMICOLON);
     }
 
-    /**
-     * while_stmt
-     */
     private void analyseWhileStmt(TokenType tyTokenType) throws CompileError {
         //while_stmt -> 'while' expr block_stmt
         expect(TokenType.WHILE_KW);
-
-        int InitPos=CurrentFnInstruction.size()-1;
-        TokenType whileExpr = analyseExpr(true);
-
+        int startPos =CurrentFnInstruction.size()-1;
         ArrayList<Integer> breakEndPos = new ArrayList<>();
-
-
+        TokenType whileST = analyseExpr(true);
         CurrentFnInstruction.add(new Instruction(Operation.brtrue, 1));
-
         CurrentFnInstruction.add(new Instruction(Operation.br));
         int currentPos = CurrentFnInstruction.size()-1;
-
-        if(whileExpr == TokenType.VOID){
+        if(whileST == TokenType.VOID){
             throw new AnalyzeError(ErrorCode.DuplicateDeclaration, new Pos(1,0));
         }
-        analyseBlockStmt(false, tyTokenType, true, breakEndPos, InitPos);
-        CurrentFnInstruction.add(new Instruction(Operation.br, InitPos-CurrentFnInstruction.size()));
-        CurrentFnInstruction.get(currentPos).setValue(CurrentFnInstruction.size()-1 - currentPos);
-        for(int i = 0; i < breakEndPos.size(); i ++){
+        analyseBlockStmt(false, tyTokenType, true, breakEndPos, startPos);
+        CurrentFnInstruction.add(new Instruction(Operation.br, startPos-CurrentFnInstruction.size()));
+        CurrentFnInstruction.get(currentPos).setValue(CurrentFnInstruction.size()-1-currentPos);
+        int size=breakEndPos.size();
+        for(int i = 0; i < size; i ++){
             CurrentFnInstruction.get(breakEndPos.get(i)).setValue(CurrentFnInstruction.size()-1-breakEndPos.get(i)); //存每一个break
         }
     }
 
-    /**
-     * if_stmt
-     */
     private boolean analyseIfStmt(TokenType tyTokenType, boolean isWhile, ArrayList<Integer> breakEndPos, int continuePos) throws CompileError {
         //if_stmt -> 'if' expr block_stmt ('else' 'if' expr block_stmt)* ('else' block_stmt)?
         expect(TokenType.IF_KW);
-        TokenType ifexpr = analyseExpr(true);
-        if(ifexpr == TokenType.VOID){
+        TokenType ifST = analyseExpr(true);
+        if(ifST == TokenType.VOID){
             throw new AnalyzeError(ErrorCode.DuplicateDeclaration, new Pos(1,0));
         }
         boolean hasReturn = false;
         boolean hasElse = false;
-        System.out.println("进入if的{}块了！");
-
+        //System.out.println("进入if的{}块了！");
         CurrentFnInstruction.add(new Instruction(Operation.brtrue, 1));
         CurrentFnInstruction.add(new Instruction(Operation.br));
         int currentPos = CurrentFnInstruction.size()-1; //br指令的当前位置
-
         hasReturn = analyseBlockStmt(false, tyTokenType, isWhile, breakEndPos, continuePos); //if 第一个block块
         CurrentFnInstruction.add(new Instruction(Operation.br)); //if块结束跳转
         int endPos = CurrentFnInstruction.size()-1;
         CurrentFnInstruction.get(currentPos).setValue(CurrentFnInstruction.size()-1 - currentPos);
-
-
-
         ArrayList<Integer> Pos = new ArrayList<>();
         while (nextIf(TokenType.ELSE_KW) != null) { //如果有else
-            System.out.println("有else哦");
+           // System.out.println("有else哦");
             if (nextIf(TokenType.IF_KW) != null) { // 是else if的情况
-                ifexpr = analyseExpr(true);
+                ifST = analyseExpr(true);
                 CurrentFnInstruction.add(new Instruction(Operation.brtrue, 1));
                 CurrentFnInstruction.add(new Instruction(Operation.br));
                 int currentPos1 = CurrentFnInstruction.size()-1; //br指令的当前位置
-
-
-
-                if(ifexpr == TokenType.VOID){
+                if(ifST == TokenType.VOID){
                     throw new AnalyzeError(ErrorCode.DuplicateDeclaration, new Pos(1,0));
                 }
                 hasReturn &= analyseBlockStmt(false, tyTokenType, isWhile, breakEndPos, continuePos);
                 CurrentFnInstruction.add(new Instruction(Operation.br));
                 Pos.add(CurrentFnInstruction.size()-1);
                 CurrentFnInstruction.get(currentPos1).setValue(CurrentFnInstruction.size()-1 - currentPos1);
-            } else if (check(TokenType.L_BRACE)) { //只有else的情况
+            }
+            else if (check(TokenType.L_BRACE)) { //只有else的情况
                 hasReturn &= analyseBlockStmt(false, tyTokenType, isWhile, breakEndPos, continuePos);
                 hasElse = true;
                 break;
             }
         }
         CurrentFnInstruction.get(endPos).setValue(CurrentFnInstruction.size()-1-endPos);
-        for(int i = 0; i < Pos.size(); i ++){
+        int size=Pos.size();
+        for(int i = 0; i < size; i ++){
             CurrentFnInstruction.get(Pos.get(i)).setValue(CurrentFnInstruction.size()-1-Pos.get(i)); //循环存每一个elseif
         }
-        if(!hasElse){
+        if(hasElse){
+            return hasReturn;
+        }
+        else{
             return false;
         }
-        return hasReturn;
     }
 
-    /**
-     * expr_stmt
-     */
     private void analyseExprStmt() throws CompileError {
         //expr_stmt -> expr ';'
-        TokenType t = null;
+        TokenType tt = null;
         if (check(TokenType.MINUS) || check(TokenType.IDENT) || check(TokenType.UINT_LITERAL) || check(TokenType.L_PAREN) || check(TokenType.DOUBLE_LITERAL) || check(TokenType.STRING_LITERAL) || check(TokenType.CHAR_LITERAL)) {
-            t = analyseExpr(true);
+            tt = analyseExpr(true);
         }
-        if(t != TokenType.VOID){
+        if(tt != TokenType.VOID){
             CurrentFnInstruction.add(new Instruction(Operation.popn, 1));
         }
         expect(TokenType.SEMICOLON);
