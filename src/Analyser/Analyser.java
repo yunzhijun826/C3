@@ -338,7 +338,6 @@ public class Analyser {
         Token nameToken = expect(TokenType.IDENT);
         expect(TokenType.COLON);
         Token couToken = expect(TokenType.IDENT);
-        //System.out.println(couToken.getValue());
         if(couToken.getValue().equals("double")){
             couToken.setTokenType(TokenType.DOUBLE);
         }
@@ -1047,7 +1046,7 @@ public class Analyser {
         isReturn = analyseBlockStmt(false, tyTT, isWhile, breakEP, conPos);
         CurrentFnInstruction.add(new Instruction(Operation.br));
         int endPos = CurrentFnInstruction.size()-1;
-        CurrentFnInstruction.get(curPos).setValue(endPos - curPos);
+        CurrentFnInstruction.get(curPos).setValue(CurrentFnInstruction.size()-1 - curPos);
         ArrayList<Integer> Pos = new ArrayList<>();
         while (nextIf(TokenType.ELSE_KW) != null) {
             if (nextIf(TokenType.IF_KW) != null) {
@@ -1063,7 +1062,7 @@ public class Analyser {
                 int x=CurrentFnInstruction.size()-1;
                 Pos.add(x);
                 int y=CurrentFnInstruction.size()-1 - curPos1;
-                CurrentFnInstruction.get(curPos1).setValue(y);
+                CurrentFnInstruction.get(curPos1).setValue(CurrentFnInstruction.size()-1 - curPos1);
             }
             else if (check(TokenType.L_BRACE)) { //只有else
                 isReturn &= analyseBlockStmt(false, tyTT, isWhile, breakEP, conPos);
